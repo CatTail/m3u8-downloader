@@ -4,7 +4,8 @@
   "description": "Fetch m3u8 and convert it to mp4 file",
   "main": "main.js",
   "scripts": {
-    "precommit": "lint-staged"
+    "precommit": "lint-staged",
+    "dev": "electron ."
   },
   "lint-staged": {
     "*.js": [
@@ -15,7 +16,6 @@
   "author": "zhongchiyu@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "debug": "^2.6.3",
     "m3u8": "0.0.7",
     "request": "^2.81.0",
     "request-promise-native": "^1.0.3",

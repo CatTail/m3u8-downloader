@@ -1,46 +1,60 @@
 const fs = require('fs')
+const joinPath = require('path').join
+const os = require('os')
 const execSync = require('child_process').execSync
 const request = require('request-promise-native')
 const m3u8 = require('m3u8')
-const debug = require('debug')('m3u8-downloader')
+
+const bin = joinPath(__dirname, 'bin', os.platform() + '_' + os.arch())
+
+try {
+  fs.accessSync(bin)
+} catch (err) {
+  log('不支持该平台')
+}
 
 const sourceElement = document.getElementById('source')
 const targetElement = document.getElementById('target')
 const downloadElement = document.getElementById('download')
+const logElement = document.getElementById('log')
 
 downloadElement.addEventListener('click', (event) => {
   const source = sourceElement.value
-  debug('source', source)
+  log('原地址', source)
   const target = targetElement.files[0].path
-  debug('target', target)
+  log('目标地址', target)
+  const concatPath = joinPath(target, 'all.ts')
+  const convertPath = joinPath(target, 'test.mp4')
 
   request(source).then((body) => {
     const parser = m3u8.createStream()
     parser.write(body)
     parser.on('m3u', (m3u) => {
       fetchTsList(m3u).then((buf) => {
-        fs.writeFileSync(target + '/all.ts', buf)
-        debug('write success')
-        alert('成功合并')
-        execSync(`${__dirname}/bin/ffmpeg -i ${target}/all.ts -bsf:a aac_adtstoasc -vcodec copy ${target}/test.mp4`)
-        alert('成功转码')
-        debug('convert success')
+        fs.writeFileSync(joinPath(target, '/all.ts'), buf)
+        log('成功合并')
+        execSync(`${bin} -y -i ${concatPath} -bsf:a aac_adtstoasc -vcodec copy ${convertPath}`)
+        log('成功转码')
       })
     })
     parser.end()
   })
 })
 
-async function fetchTsList(m3u) {
-  const uriList= m3u.items.PlaylistItem.map((item) => item.properties.uri)
+async function fetchTsList (m3u) {
+  const uriList = m3u.items.PlaylistItem.map((item) => item.properties.uri)
   const bufferList = []
   await Promise.all(uriList.map(async (uri, index) => {
-    debug('fetch uri', uri)
+    log('下载文件', uri)
     const body = await request({
       uri,
-      encoding: null,
+      encoding: null
     })
     bufferList[index] = body
   }))
   return Buffer.concat(bufferList)
+}
+
+function log (...messages) {
+  logElement.value = logElement.value + messages.join(' ') + '\n'
 }
