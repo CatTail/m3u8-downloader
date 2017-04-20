@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>m3u8 下载器</title>
+  </head>
+  <body>
+    We are using node <script>document.write(process.versions.node)</script>,
+    Chrome <script>document.write(process.versions.chrome)</script>,
+    and Electron <script>document.write(process.versions.electron)</script>.
+
+    <p>下载原地址 <input id="source" type="text" value="http://vod.mudu.tv/media-join-slice/h6erxd1u0xbofgzexcad7uqyh.m3u8"></p>
+    <p>下载目标地址 <input id="target" type="file" directory webkitdirectory></p>
+    <button id="download">下载</button>
+  </body>
+
+  <script>
+    // You can also require other files to run in this process
+    require('./renderer.js')
+  </script>
+</html>
