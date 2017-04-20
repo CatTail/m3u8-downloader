@@ -5,7 +5,9 @@
   "main": "main.js",
   "scripts": {
     "precommit": "lint-staged",
-    "dev": "electron ."
+    "dev": "NODE_ENV=development electron .",
+    "pack": "build --dir",
+    "dist": "build"
   },
   "lint-staged": {
     "*.js": [
@@ -22,8 +24,14 @@
     "shelljs": "^0.7.7"
   },
   "devDependencies": {
+    "electron": "^1.6.5",
+    "electron-builder": "^17.0.1",
     "husky": "^0.13.3",
     "lint-staged": "^3.4.0",
     "standard": "^10.0.2"
+  },
+  "build": {
+    "appId": "me.cattail.m3u8-downloader",
+    "extraResources": "bin/*"
   }
 }
