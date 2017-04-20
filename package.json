@@ -4,7 +4,13 @@
   "description": "Fetch m3u8 and convert it to mp4 file",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.js": [
+      "standard --fix",
+      "git add"
+    ]
   },
   "author": "zhongchiyu@gmail.com",
   "license": "MIT",
@@ -14,5 +20,10 @@
     "request": "^2.81.0",
     "request-promise-native": "^1.0.3",
     "shelljs": "^0.7.7"
+  },
+  "devDependencies": {
+    "husky": "^0.13.3",
+    "lint-staged": "^3.4.0",
+    "standard": "^10.0.2"
   }
 }
