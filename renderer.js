@@ -9,7 +9,10 @@ const m3u8 = require('m3u8')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const resourcesPath = joinPath(isDevelopment ? __dirname : process.resourcesPath, 'bin')
-const bin = joinPath(resourcesPath, os.platform() + '_' + os.arch())
+let bin = joinPath(resourcesPath, os.platform() + '_' + os.arch())
+if (os.platform() === 'win32') {
+  bin = bin + '.exe'
+}
 
 const sourceElement = document.getElementById('source')
 const targetElement = document.getElementById('target')
