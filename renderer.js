@@ -1,5 +1,5 @@
 const fs = require('fs')
-const joinPath = require('path').join
+const path = require('path')
 const os = require('os')
 const url = require('url')
 const execSync = require('child_process').execSync
@@ -9,8 +9,8 @@ const tmp = require('tmp')
 const m3u8 = require('m3u8')
 
 const isDevelopment = process.env.NODE_ENV === 'development'
-const resourcesPath = joinPath(isDevelopment ? __dirname : process.resourcesPath, 'bin')
-let bin = joinPath(resourcesPath, os.platform() + '_' + os.arch())
+const resourcesPath = path.join(isDevelopment ? __dirname : process.resourcesPath, 'bin')
+let bin = path.join(resourcesPath, os.platform() + '_' + os.arch())
 if (os.platform() === 'win32') {
   bin = bin + '.exe'
 }
@@ -50,7 +50,7 @@ downloadElement.addEventListener('click', (event) => {
   })
 })
 async function downloadAndConvert (source, target, uriList) {
-  const convertPath = joinPath(target, 'test.mp4')
+  const convertPath = path.join(target, path.basename(source, path.extname(source)) + '.mp4')
   const tmpfile = tmp.fileSync().name
   for (let index = 0; index < uriList.length; index++) {
     let uri = uriList[index]
@@ -83,4 +83,5 @@ async function download (from, to) {
 
 function log (...messages) {
   logElement.value = logElement.value + messages.join(' ') + '\n'
+  logElement.scrollTop = logElement.scrollHeight
 }
