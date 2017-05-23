@@ -1,6 +1,7 @@
 const fs = require('fs')
 const joinPath = require('path').join
 const os = require('os')
+const url = require('url')
 const execSync = require('child_process').execSync
 
 const request = require('request')
@@ -52,7 +53,12 @@ async function downloadAndConvert (source, target, uriList) {
   const convertPath = joinPath(target, 'test.mp4')
   const tmpfile = tmp.fileSync().name
   for (let index = 0; index < uriList.length; index++) {
-    const uri = uriList[index]
+    let uri = uriList[index]
+        // 将相对地址扩展为绝对地址
+    if (uri[0] === '/') {
+      const obj = url.parse(source)
+      uri = `${obj.protocol}//${obj.hostname}${uri}`
+    }
     await download(uri, tmpfile)
   }
   log('成功下载所有文件')
@@ -69,9 +75,9 @@ async function download (from, to) {
   return new Promise((resolve, reject) => {
     log('下载文件', from, '到', to)
     request({ uri: from, encoding: null })
-      .on('error', reject)
-      .pipe(fs.createWriteStream(to, {flags: 'a'}))
-      .on('finish', resolve)
+            .on('error', reject)
+            .pipe(fs.createWriteStream(to, {flags: 'a'}))
+            .on('finish', resolve)
   })
 }
 
