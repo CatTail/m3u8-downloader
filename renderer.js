@@ -35,7 +35,7 @@ downloadElement.addEventListener('click', (event) => {
   const target = targetElement.files[0].path
   log('目标地址', target)
 
-  request(source, (err, res, body) => {
+  request(encodeURI(source), (err, res, body) => {
     if (err) {
       log('无法请求资源', err.message)
       return
@@ -50,19 +50,39 @@ downloadElement.addEventListener('click', (event) => {
   })
 })
 async function downloadAndConvert (source, target, uriList) {
-  const convertPath = path.join(target, path.basename(source, path.extname(source)) + '.mp4')
-  const tmpfile = tmp.fileSync().name
-  for (let index = 0; index < uriList.length; index++) {
-    let uri = uriList[index]
-        // 将相对地址扩展为绝对地址
-    if (uri[0] === '/') {
-      const obj = url.parse(source)
-      uri = `${obj.protocol}//${obj.hostname}${uri}`
+  // 分五段并发下载文件
+  const segmentLength = parseInt(uriList.length / 5)
+  const segmentList = [0, 1, 2, 3, 4].map((index) => {
+    const startIndex = index * segmentLength
+    let endIndex = (index + 1) * segmentLength
+    if (index === 4) {
+      endIndex = endIndex + uriList.length % 5 + 1
     }
-    await download(uri, tmpfile)
-  }
+    return uriList.slice(startIndex, endIndex)
+  })
+  const tmpfileList = []
+  await Promise.all(segmentList.map(async (segment, index) => {
+    const tmpfile = tmpfileList[index] = tmp.fileSync().name
+    for (let index = 0; index < segment.length; index++) {
+      let uri = segment[index]
+      // 将相对地址扩展为绝对地址
+      if (uri[0] === '/') {
+        const obj = url.parse(source)
+        uri = `${obj.protocol}//${obj.hostname}${uri}`
+      }
+      await download(uri, tmpfile)
+    }
+  }))
   log('成功下载所有文件')
   try {
+    // 合并多个临时文件
+    const tmpfile = tmpfileList[0]
+    for (let index = 1; index < 5; index++) {
+      await concat(tmpfileList[index], tmpfile)
+    }
+    // 转码为 MP4
+    log('转码中')
+    const convertPath = path.join(target, path.basename(source, path.extname(source)) + '.mp4')
     execSync(`${bin} -y -i ${tmpfile} -bsf:a aac_adtstoasc -vcodec copy ${convertPath}`)
   } catch (err) {
     log(err.stack, err.message, err.name)
@@ -74,10 +94,21 @@ async function downloadAndConvert (source, target, uriList) {
 async function download (from, to) {
   return new Promise((resolve, reject) => {
     log('下载文件', from, '到', to)
-    request({ uri: from, encoding: null })
-            .on('error', reject)
-            .pipe(fs.createWriteStream(to, {flags: 'a'}))
-            .on('finish', resolve)
+    request({ uri: encodeURI(from), encoding: null })
+      .on('error', reject)
+      .pipe(fs.createWriteStream(to, {flags: 'a'}))
+      .on('finish', resolve)
+  })
+}
+
+async function concat (from, to) {
+  return new Promise((resolve, reject) => {
+    log('合并文件', from, to)
+    fs.createReadStream(from)
+      .on('error', reject)
+      .pipe(fs.createWriteStream(to, {flags: 'a'}))
+      .on('error', reject)
+      .on('finish', resolve)
   })
 }
 
