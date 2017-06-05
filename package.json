@@ -1,6 +1,6 @@
 {
   "name": "m3u8-downloader",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fetch m3u8 and convert it to mp4 file",
   "main": "main.js",
   "scripts": {
