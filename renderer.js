@@ -32,8 +32,16 @@ try {
 
 downloadElement.addEventListener('click', (event) => {
   const source = sourceElement.value
-  log('原地址', source)
+  if (!source) {
+    window.alert('请输入 m3u8 文件地址')
+    return
+  }
+  if (!targetElement.files[0]) {
+    window.alert('请选择保存路径')
+    return
+  }
   const target = targetElement.files[0].path
+  log('原地址', source)
   log('目标地址', target)
 
   request(encodeURI(source), (err, res, body) => {
@@ -52,7 +60,7 @@ downloadElement.addEventListener('click', (event) => {
 })
 async function downloadAndConvert (source, target, uriList) {
   // 初始化进度条
-  $progress.show().progress({total: uriList.length + 1})
+  $progress.show().progress({total: uriList.length, autoSuccess: false})
   // 分五段并发下载文件
   const segmentLength = parseInt(uriList.length / 5)
   const segmentList = [0, 1, 2, 3, 4].map((index) => {
@@ -85,9 +93,10 @@ async function downloadAndConvert (source, target, uriList) {
     }
     // 转码为 MP4
     log('转码中')
+    await delay(100)
     const convertPath = path.join(target, path.basename(source, path.extname(source)) + '.mp4')
     execSync(`${bin} -y -i ${tmpfile} -bsf:a aac_adtstoasc -vcodec copy ${convertPath}`)
-    $progress.progress('increment')
+    $progress.progress('set success')
   } catch (err) {
     log(err.stack, err.message, err.name)
     throw err
@@ -95,7 +104,7 @@ async function downloadAndConvert (source, target, uriList) {
   log('成功转码')
 }
 
-async function download (from, to) {
+function download (from, to) {
   return new Promise((resolve, reject) => {
     $progress.progress('increment')
     log('下载文件', from, '到', to)
@@ -106,7 +115,7 @@ async function download (from, to) {
   })
 }
 
-async function concat (from, to) {
+function concat (from, to) {
   return new Promise((resolve, reject) => {
     log('合并文件', from, to)
     fs.createReadStream(from)
@@ -120,4 +129,10 @@ async function concat (from, to) {
 function log (...messages) {
   logElement.value = logElement.value + messages.join(' ') + '\n'
   logElement.scrollTop = logElement.scrollHeight
+}
+
+function delay (timeout) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, timeout)
+  })
 }
