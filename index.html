@@ -1,18 +1,48 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>m3u8 下载器</title>
-  </head>
-  <body>
-    <p>m3u8 地址 <input id="source" type="text" value=""></p>
-    <p>保存路径 <input id="target" type="file" directory webkitdirectory></p>
-    <textarea id="log" readonly style="width: 100%; height: 200px"></textarea>
-    <button id="download">下载</button>
-  </body>
+    <head>
+        <meta charset="UTF-8">
+        <title>m3u8 下载器</title>
+        <link rel="stylesheet" type="text/css" href="semantic/dist/semantic.min.css">
+        <!--https://stackoverflow.com/questions/32621988/electron-jquery-is-not-defined-->
+        <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+        <script src="jquery-3.2.1.min.js"></script>
+        <script src="semantic/dist/semantic.js"></script>
+    </head>
+    <body>
+        <div class="ui large form" style="margin: 10px">
+            <div class="inline fields">
+                <div class="eight wide field">
+                    <label style="width: 100px">m3u8 地址</label>
+                    <input id="source" type="text">
+                </div>
+            </div>
+            <div class="inline fields">
+                <div class="eight wide field">
+                    <label style="width: 100px">保存路径</label>
+                    <input id="target" type="file" directory webkitdirectory>
+                </div>
+            </div>
+            <div class="fields">
+                <div class="sixteen wide field">
+                    <textarea id="log" readonly style="width: 100%; height: 200px"></textarea>
+                </div>
+            </div>
+            <div class="fields">
+                <div class="sixteen wide field">
+                    <div class="ui active progress" id="progress">
+                        <div class="bar">
+                            <div class="progress"></div>
+                        </div>
+                    </div>
+                    <button id="download" class="ui primary button">下载</button>
+                </div>
+            </div>
+        </div>
+    </body>
 
-  <script>
+    <script>
     // You can also require other files to run in this process
     require('./renderer.js')
-  </script>
+    </script>
 </html>
