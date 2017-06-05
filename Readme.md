@@ -3,4 +3,4 @@
 
 ## build
 
-    npm run dist
+    npm run build
