@@ -15,6 +15,7 @@ if (os.platform() === 'win32') {
   bin = bin + '.exe'
 }
 
+const $progress = $('#progress').hide()
 const sourceElement = document.getElementById('source')
 const targetElement = document.getElementById('target')
 const downloadElement = document.getElementById('download')
@@ -50,6 +51,8 @@ downloadElement.addEventListener('click', (event) => {
   })
 })
 async function downloadAndConvert (source, target, uriList) {
+  // 初始化进度条
+  $progress.show().progress({total: uriList.length + 1})
   // 分五段并发下载文件
   const segmentLength = parseInt(uriList.length / 5)
   const segmentList = [0, 1, 2, 3, 4].map((index) => {
@@ -84,6 +87,7 @@ async function downloadAndConvert (source, target, uriList) {
     log('转码中')
     const convertPath = path.join(target, path.basename(source, path.extname(source)) + '.mp4')
     execSync(`${bin} -y -i ${tmpfile} -bsf:a aac_adtstoasc -vcodec copy ${convertPath}`)
+    $progress.progress('increment')
   } catch (err) {
     log(err.stack, err.message, err.name)
     throw err
@@ -93,6 +97,7 @@ async function downloadAndConvert (source, target, uriList) {
 
 async function download (from, to) {
   return new Promise((resolve, reject) => {
+    $progress.progress('increment')
     log('下载文件', from, '到', to)
     request({ uri: encodeURI(from), encoding: null })
       .on('error', reject)
