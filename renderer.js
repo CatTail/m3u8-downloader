@@ -109,6 +109,7 @@ async function downloadAndConvert (source, target, uriList) {
 async function downloadRetry (from, to) {
   try {
     await download(from, to)
+    $progress.progress('increment')
   } catch (err) {
     await downloadRetry(from, to)
   }
@@ -116,7 +117,6 @@ async function downloadRetry (from, to) {
 
 function download (from, to) {
   return new Promise((resolve, reject) => {
-    $progress.progress('increment')
     log('下载文件', from, '到', to)
     request({ uri: encodeURI(from), encoding: null, timeout: 20000 })
       .on('error', reject)
