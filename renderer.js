@@ -8,6 +8,7 @@ const request = require('request')
 const tmp = require('tmp')
 const m3u8 = require('m3u8')
 
+const concurrent = 10
 const isDevelopment = process.env.NODE_ENV === 'development'
 const resourcesPath = path.join(isDevelopment ? __dirname : process.resourcesPath, 'bin')
 let bin = path.join(resourcesPath, os.platform() + '_' + os.arch())
@@ -62,15 +63,16 @@ async function downloadAndConvert (source, target, uriList) {
   // 初始化进度条
   $progress.show().progress({total: uriList.length, autoSuccess: false})
   // 分五段并发下载文件
-  const segmentLength = parseInt(uriList.length / 5)
-  const segmentList = [0, 1, 2, 3, 4].map((index) => {
+  const segmentLength = parseInt(uriList.length / concurrent)
+  const segmentList = []
+  for (let index = 0; index < concurrent; index++) {
     const startIndex = index * segmentLength
     let endIndex = (index + 1) * segmentLength
-    if (index === 4) {
-      endIndex = endIndex + uriList.length % 5 + 1
+    if (index === concurrent - 1) {
+      endIndex = endIndex + uriList.length % concurrent + 1
     }
-    return uriList.slice(startIndex, endIndex)
-  })
+    segmentList.push(uriList.slice(startIndex, endIndex))
+  }
   const tmpfileList = []
   await Promise.all(segmentList.map(async (segment, index) => {
     const tmpfile = tmpfileList[index] = tmp.fileSync().name
@@ -81,14 +83,14 @@ async function downloadAndConvert (source, target, uriList) {
         const obj = url.parse(source)
         uri = `${obj.protocol}//${obj.hostname}${uri}`
       }
-      await download(uri, tmpfile)
+      await downloadRetry(uri, tmpfile)
     }
   }))
   log('成功下载所有文件')
   try {
     // 合并多个临时文件
     const tmpfile = tmpfileList[0]
-    for (let index = 1; index < 5; index++) {
+    for (let index = 1; index < concurrent; index++) {
       await concat(tmpfileList[index], tmpfile)
     }
     // 转码为 MP4
@@ -104,13 +106,22 @@ async function downloadAndConvert (source, target, uriList) {
   log('成功转码')
 }
 
+async function downloadRetry (from, to) {
+  try {
+    await download(from, to)
+  } catch (err) {
+    await downloadRetry(from, to)
+  }
+}
+
 function download (from, to) {
   return new Promise((resolve, reject) => {
     $progress.progress('increment')
     log('下载文件', from, '到', to)
-    request({ uri: encodeURI(from), encoding: null })
+    request({ uri: encodeURI(from), encoding: null, timeout: 20000 })
       .on('error', reject)
       .pipe(fs.createWriteStream(to, {flags: 'a'}))
+      .on('error', reject)
       .on('finish', resolve)
   })
 }
