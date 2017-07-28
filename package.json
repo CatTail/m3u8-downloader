@@ -20,7 +20,7 @@
   "dependencies": {
     "m3u8": "0.0.7",
     "request": "^2.81.0",
-    "semantic-ui": "^2.2.10",
+    "semantic-ui": "2.2.10",
     "tmp": "0.0.31"
   },
   "devDependencies": {
