@@ -96,7 +96,7 @@ async function downloadAndConvert (source, target, uriList) {
     // 转码为 MP4
     log('转码中')
     await delay(100)
-    const convertPath = path.join(target, path.basename(source, path.extname(source)) + '.mp4')
+    const convertPath = path.join(target, path.basename(source, path.extname(source)).slice(10) + '.mp4')
     execSync(`${bin} -y -i ${tmpfile} -bsf:a aac_adtstoasc -vcodec copy ${convertPath}`)
     $progress.progress('set success')
   } catch (err) {
